@@ -36,8 +36,8 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
 <key>CFBundleName</key><string>QuotaHandoff</string>
 <key>CFBundleDisplayName</key><string>QuotaHandoff</string>
 <key>CFBundleExecutable</key><string>CodexQuota</string>
-<key>CFBundleShortVersionString</key><string>1.10.0</string>
-<key>CFBundleVersion</key><string>14</string>
+<key>CFBundleShortVersionString</key><string>1.10.1</string>
+<key>CFBundleVersion</key><string>15</string>
 <key>LSMinimumSystemVersion</key><string>13.0</string>
 <key>LSUIElement</key><true/>
 <key>NSAppleEventsUsageDescription</key><string>在你开启自动调度后，正常退出并重新打开 ChatGPT 以切换账号。</string>

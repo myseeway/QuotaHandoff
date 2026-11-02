@@ -14,8 +14,8 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
 <key>CFBundleIdentifier</key><string>local.QuotaHandoff.Demo</string>
 <key>CFBundleName</key><string>QuotaHandoff Demo</string>
 <key>CFBundleExecutable</key><string>QuotaHandoffDemo</string>
-<key>CFBundleShortVersionString</key><string>1.10.0</string>
-<key>CFBundleVersion</key><string>14</string>
+<key>CFBundleShortVersionString</key><string>1.10.1</string>
+<key>CFBundleVersion</key><string>15</string>
 <key>LSMinimumSystemVersion</key><string>13.0</string>
 <key>LSUIElement</key><true/>
 </dict></plist>

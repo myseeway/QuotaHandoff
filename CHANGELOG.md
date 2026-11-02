@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.10.1 — 2026-11-02
+
+- Split the demo fixture into explicitly typed values so older Swift compilers can build it without a type-checking timeout.
+
 ## 1.10.0 — 2026-11-02
 
 First public source release under the name **QuotaHandoff · 额度接力**.

@@ -201,7 +201,7 @@ class RPC:
         self.counter = 0
         threading.Thread(target=self._read, daemon=True).start()
         try:
-            self.call('initialize', {'clientInfo': {'name': 'codex_quota_widget', 'title': 'QuotaHandoff', 'version': '1.10.0'},
+            self.call('initialize', {'clientInfo': {'name': 'codex_quota_widget', 'title': 'QuotaHandoff', 'version': '1.10.1'},
                                      'capabilities': {'experimentalApi': True}})
             self.send({'method': 'initialized'})
             t = auth['tokens']

@@ -940,7 +940,7 @@ class Engine:
             data['cards'] = [dict(expiresAt=c.get('expiresAt'), status=c.get('status'), title=c.get('title')) for c in cards]
             accounts.append(data)
         plan = {k: v for k, v in self.plan.items() if k != 'credit'}
-        return dict(version='1.10.0', mode=self.mode, autoReset=self.auto_reset, accounts=accounts, tasks=self.tasks,
+        return dict(version='1.10.1', mode=self.mode, autoReset=self.auto_reset, accounts=accounts, tasks=self.tasks,
                     desktopIssues=self.desktop_issues, cleanupPendingCount=cleanup_pending_count(),
                     lastCompleted=self.completed_view(),
                     canRetryFailedQuit=self.can_retry_failed_quit(),
