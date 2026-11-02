@@ -1,0 +1,35 @@
+name: Checks
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test-and-build:
+    runs-on: macos-14
+    timeout-minutes: 15
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Check publication privacy
+        run: python3 scripts/privacy_check.py --history
+      - name: Test without real accounts
+        run: PYTHONDONTWRITEBYTECODE=1 /usr/bin/python3 -m unittest discover -s tests -q
+      - name: Build native apps
+        run: |
+          bash scripts/build.sh
+          bash scripts/build-demo.sh
+      - name: Verify local signatures
+        run: |
+          codesign --verify --deep --strict 'dist/QuotaHandoff.app'
+          codesign --verify --deep --strict 'dist/QuotaHandoff Demo.app'

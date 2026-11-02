@@ -1,0 +1,26 @@
+# Generated applications, compiler caches and local state
+dist/
+.build-cache/
+.build/
+.state/
+__pycache__/
+*.py[cod]
+*.sqlite*
+*.db
+*.log
+.DS_Store
+
+# Credentials and personal configuration: never publish
+.codex/
+.env
+.env.*
+auth*.json
+*credentials*.json
+*secrets*.json
+*.pem
+*.key
+*.p12
+*.pfx
+*.keychain*
+status.json
+.local/
