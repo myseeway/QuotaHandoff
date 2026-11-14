@@ -9,6 +9,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]/'backend'))
 import polling
 from service import Engine, Store, UserControlChanged
 from test_policy import account, NOW
+from test_profiles import login
 
 
 class PollingTests(unittest.TestCase):
@@ -19,6 +20,7 @@ class PollingTests(unittest.TestCase):
         self.engine.pool.shutdown()
         self.engine.pool = Mock()
         self.engine.pool.submit.side_effect = lambda *args: concurrent.futures.Future()
+        self.engine.vault.get.side_effect = lambda key: login(sub=key)
         self.engine.profiles = [dict(key='a', alias='甲'), dict(key='b', alias='乙')]
         self.engine.accounts = [account('a', 80), account('b', 3)]
         self.engine.current = 'a'

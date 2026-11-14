@@ -12,7 +12,7 @@ import time
 import uuid
 import fcntl
 
-from adapters import HOME, Vault, CredentialStoreError, MissingCredentials, Desktop, RPC, cleanup_pending_count, read_auth, usage, identity, account_profile, credential_revision, desktop_running, close_desktop, open_desktop, replace_auth
+from adapters import HOME, Vault, CredentialStoreError, MissingCredentials, Desktop, RPC, cleanup_pending_count, read_auth, usage, identity, account_profile, credential_revision, credential_fingerprint, desktop_running, close_desktop, open_desktop, replace_auth
 from policy import normalize, decide, resumable, usable, known
 import polling
 
@@ -82,6 +82,7 @@ class Engine:
         self.plan = dict(action='unknown', reason='正在读取账号')
         self.pool = concurrent.futures.ThreadPoolExecutor(max_workers=3)
         self.futures = {}
+        self.query_fingerprints = {}
         self.desktop_future = None
         self.poll_records = store.get('poll_records', {})
         self.refresh_requested = set()
@@ -131,6 +132,27 @@ class Engine:
             self.vault.put(key, auth)
             next(p for p in self.profiles if p['key'] == key).update(account_profile(auth))
         self.store.put('profiles', self.profiles)
+        self.note_credentials(key, auth)
+
+    def note_credentials(self, key, auth):
+        record = self.poll_records.get(key, {})
+        fingerprint = credential_fingerprint(auth)
+        previous = record.get('credentialFingerprint')
+        # Upgrade older records using the login's own revision, not the file mtime.
+        # A normal restart with the same login keeps its existing failure backoff.
+        revision = credential_revision(auth)
+        changed = (previous is not None and previous != fingerprint) or (
+            previous is None and record.get('failures', 0) > 0 and revision is not None
+            and record.get('attemptedAt') is not None and revision > record['attemptedAt'])
+        if changed:
+            record = dict(record, failures=0, retryAt=0)
+            message = '登录已更新，可手动刷新额度' if self.mode == 'paused' else '登录已更新，等待重新查询额度'
+            self.update_account(key, dict(error=message, credentialError=False))
+            if self.mode != 'paused':
+                self.refresh_requested.add(key)
+            self.store.event('检测到新的登录资料，已清除旧的额度查询等待')
+        self.poll_records[key] = dict(record, credentialFingerprint=fingerprint)
+        self.store.put('poll_records', self.poll_records)
 
     def migrate_profiles(self):
         # Existing installs also gain names, without importing stale backup credentials.
@@ -260,6 +282,10 @@ class Engine:
         for key, future in list(self.futures.items()):
             if not future.done():
                 continue
+            queried = self.query_fingerprints.pop(key, None)
+            if queried is not None and queried != self.poll_records.get(key, {}).get('credentialFingerprint'):
+                del self.futures[key]
+                continue  # An old login's result cannot replace the newer login's state/backoff.
             try:
                 self.update_account(key, future.result())
                 self.poll_records[key] = dict(self.poll_records.get(key, {}), failures=0, retryAt=0, completedAt=now)
@@ -280,7 +306,10 @@ class Engine:
             self.poll_records[key] = dict(self.poll_records.get(key, {}), attemptedAt=now)
             self.store.put('poll_records', self.poll_records)
             try:
-                self.futures[key] = self.pool.submit(self.query, self.vault.get(key))
+                auth = self.vault.get(key)
+                self.note_credentials(key, auth)
+                self.query_fingerprints[key] = credential_fingerprint(auth)
+                self.futures[key] = self.pool.submit(self.query, auth)
             except Exception as error:
                 self.quota_failed(key, error, now)
 
@@ -934,13 +963,18 @@ class Engine:
                 records.append(dict(profile, remaining=None, windows=[], cards=[], cardCount=None, cardsComplete=False))
         for a in records:
             data = {k: v for k, v in a.items() if k != 'cards'}
+            record = self.poll_records.get(a['key'], {})
+            if record.get('failures', 0) > 0 and record.get('retryAt', 0) > time.time():
+                data['queryRetryAt'] = record['retryAt']
+                if not data.get('error'):
+                    data['error'] = '额度查询失败，等待重试'
             data['current'] = self.identity_verified and a['key'] == self.current
             data['nextCheckAt'] = (self.next_query_at(a, time.time()) if self.mode != 'paused' or a['key'] in self.refresh_requested else None)
             cards = sorted(a.get('cards', []), key=lambda c: (c.get('expiresAt') is None, c.get('expiresAt') or 0))
             data['cards'] = [dict(expiresAt=c.get('expiresAt'), status=c.get('status'), title=c.get('title')) for c in cards]
             accounts.append(data)
         plan = {k: v for k, v in self.plan.items() if k != 'credit'}
-        return dict(version='1.10.1', mode=self.mode, autoReset=self.auto_reset, accounts=accounts, tasks=self.tasks,
+        return dict(version='1.10.2', mode=self.mode, autoReset=self.auto_reset, accounts=accounts, tasks=self.tasks,
                     desktopIssues=self.desktop_issues, cleanupPendingCount=cleanup_pending_count(),
                     lastCompleted=self.completed_view(),
                     canRetryFailedQuit=self.can_retry_failed_quit(),

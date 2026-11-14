@@ -98,6 +98,13 @@ def credential_revision(auth):
     return max(revisions) if revisions else None
 
 
+def credential_fingerprint(auth):
+    """Compare login material without persisting or exposing the credentials themselves."""
+    tokens = auth.get('tokens') or {}
+    material = {field: tokens.get(field) for field in ('access_token', 'refresh_token', 'id_token', 'account_id')}
+    return hashlib.sha256(json.dumps(material, sort_keys=True).encode()).hexdigest()
+
+
 def identity(auth):
     tokens = auth.get('tokens') or {}
     if not tokens.get('access_token') or not tokens.get('account_id'):
@@ -201,7 +208,7 @@ class RPC:
         self.counter = 0
         threading.Thread(target=self._read, daemon=True).start()
         try:
-            self.call('initialize', {'clientInfo': {'name': 'codex_quota_widget', 'title': 'QuotaHandoff', 'version': '1.10.1'},
+            self.call('initialize', {'clientInfo': {'name': 'codex_quota_widget', 'title': 'QuotaHandoff', 'version': '1.10.2'},
                                      'capabilities': {'experimentalApi': True}})
             self.send({'method': 'initialized'})
             t = auth['tokens']

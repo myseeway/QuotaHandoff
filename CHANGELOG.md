@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.10.2 — 2026-11-14
+
+- Refresh quota after a renewed login, clearing the previous credentials' failure backoff while preserving request spacing and the selected monitoring mode.
+- Discard quota responses from older credentials after a new login is detected.
+- Show the retry time when an account is waiting after a failed query, including after restarting the widget.
+
 ## 1.10.1 — 2026-11-02
 
 - Split the demo fixture into explicitly typed values so older Swift compilers can build it without a type-checking timeout.

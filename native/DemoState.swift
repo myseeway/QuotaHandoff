@@ -37,7 +37,7 @@ func demoState() -> [String: Any] {
     let preflight: [String: Any] = ["ready": true, "checks": checks]
     let tasks: [[String: Any]] = [["id": "demo-task", "title": "整理项目文档", "status": "active"]]
     return [
-        "version": "1.10.1", "mode": "auto", "autoReset": false,
+        "version": "1.10.2", "mode": "auto", "autoReset": false,
         "accounts": [personal, work], "tasks": tasks,
         "plan": ["action": "stay", "reason": "当前额度充足，继续使用"],
         "preflight": preflight,

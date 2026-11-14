@@ -243,6 +243,9 @@ struct AccountCard: View {
             }
             if let error = data["error"] as? String {
                 Label(error, systemImage: "exclamationmark.circle").font(.caption).foregroundStyle(.orange)
+                if let retry = data["queryRetryAt"] as? Double {
+                    Text("预计 \(dateText(retry)) 重试").font(.system(size: 10)).foregroundStyle(.secondary)
+                }
             } else {
                 ForEach(Array((data["windows"] as? [[String: Any]] ?? []).enumerated()), id: \.offset) { _, w in
                     let n = w["remaining"] as? Double ?? 0
@@ -493,7 +496,7 @@ struct Panel: View {
                         Button("载入另一个登录文件…", action: model.importAccount)
                         Text("自动调度时，当前账号通常每 30 秒查询，接近阈值且有任务运行时每 10 秒查询。备用账号与仅观察模式每分钟查询；查询失败后延长重试间隔。")
                             .font(.system(size: 10)).foregroundStyle(.secondary)
-                        Text("版本 1.10.1 · 自动调度仍处于实验阶段。所有时间采用系统时区。")
+                        Text("版本 1.10.2 · 自动调度仍处于实验阶段。所有时间采用系统时区。")
                             .font(.system(size: 10)).foregroundStyle(.secondary)
                         let events = model.state["events"] as? [[String: Any]] ?? []
                         if let completed = model.state["lastCompleted"] as? [String: Any] {
